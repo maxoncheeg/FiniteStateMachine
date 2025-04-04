@@ -2,25 +2,17 @@
 
 namespace FiniteStateMachine.Routes;
 
-public class StringRoute : IRoute
+public class StringRoute : AbstractRoute
 {
     private readonly string _word;
     private int _index = 0;
 
-    public RouteState State { get; private set; } = RouteState.NotStarted;
-    public string StartState { get; }
-    public string EndState { get; }
-    public string ErrorMessage { get; }
-
-    public StringRoute(string word, string startState, string endState, string errorMessage = "")
+    public StringRoute(string word, string startState, string endState) : base(startState, endState)
     {
-        StartState = startState;
-        EndState = endState;
         _word = word;
-        ErrorMessage = errorMessage;
     }
 
-    public char PutChar(char symbol)
+    public override char PutChar(char symbol)
     {
         if (_index >= _word.Length)
         {
@@ -45,10 +37,11 @@ public class StringRoute : IRoute
         return symbol;
     }
 
-    public void Reset()
+    public override void Reset()
     {
+        base.Reset();
+        
         _index = 0;
-        State = RouteState.NotStarted;
     }
     
     public override string ToString()

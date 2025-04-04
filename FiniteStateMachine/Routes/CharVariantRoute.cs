@@ -2,23 +2,16 @@
 
 namespace FiniteStateMachine.Routes;
 
-public class CharVariantRoute : IRoute
+public class CharVariantRoute : AbstractRoute
 {
     private readonly IList<char> _chars;
-    public RouteState State { get; private set; } = RouteState.NotStarted;
-    public string StartState { get; }
-    public string EndState { get; }
-    public string ErrorMessage { get; }
 
-    public CharVariantRoute(IList<char> chars, string startState, string endState, string errorMessage = "")
+    public CharVariantRoute(IList<char> chars, string startState, string endState) : base(startState, endState)
     {
-        StartState = startState;
-        EndState = endState;
         _chars = chars;
-        ErrorMessage = errorMessage;
     }
 
-    public char PutChar(char symbol)
+    public override char PutChar(char symbol)
     {
         foreach (var @char in _chars)
         {
@@ -33,18 +26,13 @@ public class CharVariantRoute : IRoute
 
         return symbol;
     }
-
-    public void Reset()
-    {
-        State = RouteState.NotStarted;
-    }
-
+    
     public override string ToString()
     {
         string result = string.Empty;
         
         foreach (var @char in _chars)
-            result += @char;
+            result += @char == '\n' ? "\\n" : @char;
         
         return result;
     }

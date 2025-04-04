@@ -3,23 +3,16 @@ using FiniteStateMachine.Abstract;
 
 namespace FiniteStateMachine.Routes;
 
-public class RegexSymbolRoute : IRoute
+public class RegexSymbolRoute : AbstractRoute
 {
     private readonly string _pattern;
-    public RouteState State { get; private set; } = RouteState.NotStarted;
-    public string StartState { get; }
-    public string EndState { get; }
-    public string ErrorMessage { get; }
 
-    public RegexSymbolRoute(string pattern, string startState, string endState, string errorMessage = "")
+    public RegexSymbolRoute(string pattern, string startState, string endState) : base(startState, endState)
     {
-        StartState = startState;
-        EndState = endState;
         _pattern = pattern;
-        ErrorMessage = errorMessage;
     }
 
-    public char PutChar(char symbol)
+    public override char PutChar(char symbol)
     {
         if(Regex.IsMatch(symbol.ToString(), _pattern))
         {
@@ -29,12 +22,8 @@ public class RegexSymbolRoute : IRoute
         {
             State = RouteState.Error;
         }
+        
         return symbol;
-    }
-
-    public void Reset()
-    {
-        State = RouteState.NotStarted;
     }
     
     public override string ToString()

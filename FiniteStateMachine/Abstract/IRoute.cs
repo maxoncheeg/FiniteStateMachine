@@ -5,7 +5,8 @@ public interface IRoute
     public RouteState State { get; }
     public string StartState { get; }
     public string EndState { get; }
-    public string ErrorMessage { get; }
+    public string ErrorMessage { get; set; }
+    public int Priority { get; set; }
     
     public char PutChar(char symbol);
     public void Reset();
