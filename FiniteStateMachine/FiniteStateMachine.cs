@@ -53,6 +53,7 @@ public class FiniteStateMachine : IFiniteStateMachine
         {
             _currentRoutes = _states.Where(state => state.Key.Item1 == _currentState)
                 .SelectMany(state => state.Value ?? []).ToList();
+            _currentRoutes.Sort((r1, r2) => r1.Priority < r2.Priority ? -1 : 1);
 
             _isFirstIteration = false;
         }
@@ -83,7 +84,7 @@ public class FiniteStateMachine : IFiniteStateMachine
 
                 _currentRoutes.RemoveAt(i--);
             }
-            else if (_currentRoutes[i].State == RouteState.Completed)
+            else if (_currentRoutes[i].State == RouteState.Completed && _currentRoutes[i].Priority == _currentRoutes[0].Priority)
             {
                 _currentState = _currentRoutes[i].EndState;
                 _isFirstIteration = true;
