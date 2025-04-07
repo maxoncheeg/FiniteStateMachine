@@ -2,9 +2,12 @@
 
 public class StateEventArgs : System.EventArgs
 {
-    public bool HasSearchCompleted { get; set; } = false;
-    public int? StartIndex { get; set; } = null;
-    public int? Length { get; set; } = null;
+    public bool IsFinalState { get; init; }
+    
+    public int? StartIndex { get; init; }
+    public int? Length { get; init; }
+    
+    public string Result { get; init; } = string.Empty;
     public string PreviousState { get; set; } = string.Empty;
     public string CurrentState { get; set; } = string.Empty;
     public string Route { get; set; } = string.Empty;

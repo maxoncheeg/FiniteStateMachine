@@ -9,6 +9,7 @@ public interface IFiniteStateMachine
     public event EventHandler<StateEventArgs> StateChanged;
     public event EventHandler<ErrorEventArgs> ErrorOccurred;
     
-    public bool PutChar(char symbol, int index);
+    public int PutChar(char symbol, int index);
+    public int PutString(string value);
     public void Reset();
 }

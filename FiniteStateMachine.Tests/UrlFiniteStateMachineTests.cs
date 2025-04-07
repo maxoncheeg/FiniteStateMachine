@@ -44,7 +44,7 @@ public class UrlFiniteStateMachineTests
         _urlStateMachine.Reset();
         _urlStateMachine.StateChanged += (sender, args) =>
         {
-            if (args.HasSearchCompleted && args.StartIndex == 0 && args.Length == url.Length)
+            if (args.IsFinalState && args.StartIndex == 0 && args.Length == url.Length)
                 Assert.Fail();
         };
 
@@ -68,7 +68,7 @@ public class UrlFiniteStateMachineTests
         _urlStateMachine.Reset();
         _urlStateMachine.StateChanged += (sender, args) =>
         {
-            if (args.HasSearchCompleted && args.StartIndex == 0 && args.Length == url.Length)
+            if (args.IsFinalState && args.StartIndex == 0 && args.Length == url.Length)
                 Assert.Pass();
         };
 

@@ -1,4 +1,5 @@
 ﻿using FiniteStateMachine.Abstract;
+using FiniteStateMachine.Enums;
 
 namespace FiniteStateMachine.Routes;
 
@@ -11,29 +12,28 @@ public class CharVariantRoute : AbstractRoute
         _chars = chars;
     }
 
-    public override char PutChar(char symbol)
+    public override bool PutChar(char symbol)
     {
-        foreach (var @char in _chars)
+        if(base.PutChar(symbol))
+            return true;
+        
+        if (_chars.Any(@char => @char == symbol))
         {
-            if (@char == symbol)
-            {
-                State = RouteState.Completed;
-                return @char;
-            }
+            State = RouteState.Completed;
         }
+        else
+            State = RouteState.Error;
 
-        State = RouteState.Error;
-
-        return symbol;
+        return false;
     }
-    
+
     public override string ToString()
     {
         string result = string.Empty;
-        
+
         foreach (var @char in _chars)
             result += @char == '\n' ? "\\n" : @char;
-        
+
         return result;
     }
 }

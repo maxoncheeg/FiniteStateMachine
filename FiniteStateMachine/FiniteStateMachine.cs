@@ -1,4 +1,5 @@
 ﻿using FiniteStateMachine.Abstract;
+using FiniteStateMachine.Enums;
 using FiniteStateMachine.EventArgs;
 using ErrorEventArgs = FiniteStateMachine.EventArgs.ErrorEventArgs;
 
@@ -9,9 +10,10 @@ public class FiniteStateMachine : IFiniteStateMachine
     private readonly string _startState;
     private readonly string _endState;
 
-    private int _startIndex = 0;
-    private int _length = 0;
+    private int _startIndex;
+    private int _length;
     private string _currentState;
+    private string _currentResult = string.Empty;
     private bool _inProgress;
     private bool _isFirstIteration = true;
 
@@ -19,6 +21,7 @@ public class FiniteStateMachine : IFiniteStateMachine
     private readonly Dictionary<(string, string), IList<IRoute>?> _states;
 
     private List<IRoute> _currentRoutes = [];
+    private ISuccessfulPosition? _successfulPosition = null;
 
     public IReadOnlyDictionary<(string, string), IList<IRoute>?> States => _states;
 
@@ -34,26 +37,23 @@ public class FiniteStateMachine : IFiniteStateMachine
         _startState = startState;
         _endState = endState;
 
-        // заполняем наш словарь состояний
-        foreach (var route in routes)
+        foreach (var route in routes.Where(route => !_states.TryAdd((route.StartState, route.EndState), [route])))
         {
-            if (!_states.TryAdd((route.StartState, route.EndState), [route]))
-            {
-                _states[(route.StartState, route.EndState)] ??= new List<IRoute>();
-                _states[(route.StartState, route.EndState)]?.Add(route);
-            }
+            _states[(route.StartState, route.EndState)] ??= new List<IRoute>();
+            _states[(route.StartState, route.EndState)]?.Add(route);
         }
 
         _currentState = startState;
     }
 
-    public bool PutChar(char symbol, int symbolIndex)
+    public int PutChar(char symbol, int symbolIndex)
     {
         if (_isFirstIteration)
         {
             _currentRoutes = _states.Where(state => state.Key.Item1 == _currentState)
                 .SelectMany(state => state.Value ?? []).ToList();
             _currentRoutes.Sort((r1, r2) => r1.Priority < r2.Priority ? -1 : 1);
+            _successfulPosition = null;
 
             _isFirstIteration = false;
         }
@@ -62,45 +62,70 @@ public class FiniteStateMachine : IFiniteStateMachine
         {
             _startIndex = symbolIndex;
             _length = 0;
+            _currentResult = string.Empty;
         }
 
-        List<IRouteError> newErrors = new List<IRouteError>();
+        List<IRouteError> newErrors = [];
+        _currentResult += symbol;
 
         _length++;
         for (int i = 0; i < _currentRoutes.Count; i++)
         {
-            _currentRoutes[i].PutChar(symbol);
+            var isErrorSymbol = _currentRoutes[i].PutChar(symbol);
+
             if (_currentRoutes[i].State == RouteState.Error)
             {
-                newErrors.Add(new RouteError()
+                var errorAction = _currentRoutes[i].ErrorOptions.Action;
+                // todo: учитывать route.ErrorOptions
+
+                if (errorAction == RouteErrorAction.RollBack)
                 {
-                    StartIndex = _startIndex,
-                    Position = symbolIndex,
-                    EndState = _currentRoutes[i].EndState,
-                    StartState = _currentRoutes[i].StartState,
-                    Length = _length,
-                    Text = _currentRoutes[i].ErrorMessage
-                });
-
-                _currentRoutes.RemoveAt(i--);
-            }
-            else if (_currentRoutes[i].State == RouteState.Completed && _currentRoutes[i].Priority == _currentRoutes[0].Priority)
-            {
-                _currentState = _currentRoutes[i].EndState;
-                _isFirstIteration = true;
-
-                StateChanged?.Invoke(this,
-                    new StateEventArgs()
+                    if (_currentRoutes.Count > 1)
                     {
-                        HasSearchCompleted = _currentState == _endState, StartIndex = _startIndex, Length = _length,
-                        Route = _currentRoutes[i].ToString(), CurrentState = _currentState,
-                        PreviousState = _currentRoutes[i].StartState
-                    });
-
-                if (_currentState == _endState)
-                {
-                    ResetRoutes(symbolIndex);
+                        _currentRoutes.RemoveAt(i--);
+                        //_length--;
+                        //PutChar(symbol, symbolIndex);
+                    }
+                    else if (_successfulPosition != null)
+                    {
+                        string unseenText = _currentResult.Substring(_successfulPosition.Index + 1);
+                        _currentResult = _currentResult.Substring(0, _successfulPosition.Index + 1);
+                        _length = _successfulPosition.Index + 1;
+                        
+                        MoveToNextState(_successfulPosition.Route);
+                        for (int j = 0; j < unseenText.Length; j++)
+                        {
+                            PutChar(unseenText[j], j);
+                        }
+                    }
                 }
+
+                if (errorAction == RouteErrorAction.Skip && isErrorSymbol || errorAction == RouteErrorAction.SkipState)
+                {
+                    MoveToNextState(_currentRoutes[i]);
+                    _length--;
+                    PutChar(symbol, symbolIndex);
+                }
+
+                if (errorAction == RouteErrorAction.Error)
+                {
+                    _currentRoutes.RemoveAt(i--);
+                }
+            }
+            else if (_currentRoutes[i].State == RouteState.Completed)
+            {
+                if (_currentRoutes[i].Priority != _currentRoutes[0].Priority)
+                {
+                    if(_successfulPosition == null)
+                        _successfulPosition = new SuccessfulPosition(_currentRoutes[i], symbolIndex);
+                    else if (_successfulPosition.Route.Priority > _currentRoutes[i].Priority)
+                        _successfulPosition = new SuccessfulPosition(_currentRoutes[i], symbolIndex);
+                    
+                    _currentRoutes.RemoveAt(i--);
+                    continue;
+                }
+
+                MoveToNextState(_currentRoutes[i]);
 
                 break;
             }
@@ -114,25 +139,54 @@ public class FiniteStateMachine : IFiniteStateMachine
             _errors.Clear();
 
             var inProgress = _inProgress;
-            ResetRoutes(symbolIndex);
-            
+            ResetRoutes();
+
             if (inProgress)
                 PutChar(symbol, symbolIndex);
         }
 
         _inProgress = true;
 
-        return true;
+        return 0;
+    }
+
+    public int PutString(string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void MoveToNextState(IRoute route)
+    {
+        _currentState = route.EndState;
+        _isFirstIteration = true;
+
+        StateChanged?.Invoke(this,
+            new StateEventArgs()
+            {
+                IsFinalState = _currentState == _endState,
+
+                StartIndex = _startIndex,
+                Length = _length,
+                Route = route.ToString() ?? String.Empty,
+
+                CurrentState = _currentState, Result = _currentResult,
+                PreviousState = route.StartState
+            });
+
+        if (_currentState == _endState)
+        {
+            ResetRoutes();
+        }
     }
 
     public void Reset()
     {
         ErrorOccurred = null;
         StateChanged = null;
-        ResetRoutes(0);
+        ResetRoutes();
     }
 
-    private void ResetRoutes(int index)
+    private void ResetRoutes()
     {
         foreach (var states in _states)
             if (states.Value != null)
@@ -141,8 +195,6 @@ public class FiniteStateMachine : IFiniteStateMachine
 
         _currentState = _startState;
         _inProgress = false;
-        _startIndex = index;
         _isFirstIteration = true;
-        _length = 0;
     }
 }
