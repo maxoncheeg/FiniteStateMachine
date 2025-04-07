@@ -5,6 +5,6 @@ namespace FiniteStateMachine.Abstract;
 public interface IRouteErrorOptions
 {
     public RouteErrorAction Action { get; }
-    public IList<char> ErrorSymbols { get; }
+    public string ErrorSymbolRegexPattern { get; }
     public char? FixSymbol { get; }
 }

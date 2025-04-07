@@ -1,4 +1,5 @@
-﻿using FiniteStateMachine.Enums;
+﻿using System.Text.RegularExpressions;
+using FiniteStateMachine.Enums;
 
 namespace FiniteStateMachine.Abstract;
 
@@ -18,12 +19,13 @@ public abstract class AbstractRoute(string startState, string endState) : IRoute
     /// <returns></returns>
     public virtual bool PutChar(char symbol)
     {
-        if (ErrorOptions.ErrorSymbols.Contains(symbol))
+        if (!string.IsNullOrEmpty(ErrorOptions.ErrorSymbolRegexPattern) &&
+            Regex.IsMatch(ErrorOptions.ErrorSymbolRegexPattern, symbol.ToString()))
         {
             State = RouteState.Error;
             return true;
         }
-        
+
         return false;
     }
 

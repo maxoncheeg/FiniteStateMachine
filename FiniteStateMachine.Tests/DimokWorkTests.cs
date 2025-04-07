@@ -17,7 +17,7 @@ public class DimokWorkTests
             new StringRoute(@"void", "A", "B")
             {
                 Priority = 1,
-                ErrorOptions = new RouteErrorOptions { ErrorSymbols = [' '], Action = RouteErrorAction.Skip }
+                ErrorOptions = new RouteErrorOptions { ErrorSymbolRegexPattern = @"[ ]", Action = RouteErrorAction.Skip }
             },
             new StringRoute(@"char", "A", "B") { Priority = 1 },
 
