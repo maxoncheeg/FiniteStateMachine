@@ -1,4 +1,4 @@
-﻿namespace FiniteStateMachine;
+﻿namespace FiniteStateMachine.Enums;
 
 public enum RouteState
 {

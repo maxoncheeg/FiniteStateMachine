@@ -1,4 +1,6 @@
-﻿namespace FiniteStateMachine.Abstract;
+﻿using FiniteStateMachine.Enums;
+
+namespace FiniteStateMachine.Abstract;
 
 public abstract class AbstractRoute(string startState, string endState) : IRoute
 {
@@ -6,10 +8,24 @@ public abstract class AbstractRoute(string startState, string endState) : IRoute
     public string StartState { get; } = startState;
     public string EndState { get; } = endState;
     public string ErrorMessage { get; set; } = string.Empty;
+    public int Priority { get; set; }
+    public IRouteErrorOptions ErrorOptions { get; set; } = new RouteErrorOptions();
 
-    public int Priority { get; set; } = 0;
-
-    public abstract char PutChar(char symbol);
+    /// <summary>
+    /// Если символ является запрещенным вернет true
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    public virtual bool PutChar(char symbol)
+    {
+        if (ErrorOptions.ErrorSymbols.Contains(symbol))
+        {
+            State = RouteState.Error;
+            return true;
+        }
+        
+        return false;
+    }
 
     public virtual void Reset()
     {

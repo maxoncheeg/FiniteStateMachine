@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using FiniteStateMachine.Abstract;
+using FiniteStateMachine.Enums;
 
 namespace FiniteStateMachine.Routes;
 
@@ -12,20 +13,21 @@ public class RegexSymbolRoute : AbstractRoute
         _pattern = pattern;
     }
 
-    public override char PutChar(char symbol)
+    public override bool PutChar(char symbol)
     {
-        if(Regex.IsMatch(symbol.ToString(), _pattern))
+        if (base.PutChar(symbol))
+            return true;
+
+        if (Regex.IsMatch(symbol.ToString(), _pattern))
         {
             State = RouteState.Completed;
         }
         else
-        {
             State = RouteState.Error;
-        }
-        
-        return symbol;
+
+        return false;
     }
-    
+
     public override string ToString()
     {
         return _pattern;

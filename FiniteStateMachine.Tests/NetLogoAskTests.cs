@@ -15,8 +15,8 @@ public class NetLogoAskTests
             new StringRoute(@" ", "B", "C"),
             new StringRoute(@"turtles", "C", "D"),
             new StringRoute(@"[", "C", "D"),
-            new StringRoute(@"set", "D", "E"),
             
+            new StringRoute(@"set", "D", "E"),
             new StringRoute(@"forward", "D", "S"),
             new StringRoute(@"back", "D", "S"),
             new StringRoute(@"left", "D", "S"),

@@ -1,4 +1,5 @@
 ﻿using FiniteStateMachine.Abstract;
+using FiniteStateMachine.Enums;
 
 namespace FiniteStateMachine.Routes;
 
@@ -12,29 +13,31 @@ public class StringRoute : AbstractRoute
         _word = word;
     }
 
-    public override char PutChar(char symbol)
+    public override bool PutChar(char symbol)
     {
+        if(base.PutChar(symbol))
+            return true;
+        
         if (_index >= _word.Length)
         {
-            State = RouteState.Error;
-            return symbol;
+            State =  RouteState.Error;
         }
 
         if (symbol == _word[_index] && _index == _word.Length - 1)
         {
-            State = RouteState.Completed;
+            State =  RouteState.Completed;
         }
         else if (symbol != _word[_index])
         {
-            State = RouteState.Error;
+            State =  RouteState.Error;
         }
         else
         {
             _index++;
-            State = RouteState.IsProgress;
+            State =  RouteState.IsProgress;
         }
 
-        return symbol;
+        return false;
     }
 
     public override void Reset()
