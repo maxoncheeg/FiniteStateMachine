@@ -21,7 +21,7 @@ public class FiniteStateMachine : IFiniteStateMachine
     private readonly Dictionary<(string, string), IList<IRoute>?> _states;
 
     private List<IRoute> _currentRoutes = [];
-    private List<IRoute> _successfulRoutes = [];
+    private ISuccessfulPosition? _successfulPosition = null;
 
     public IReadOnlyDictionary<(string, string), IList<IRoute>?> States => _states;
 
@@ -53,7 +53,7 @@ public class FiniteStateMachine : IFiniteStateMachine
             _currentRoutes = _states.Where(state => state.Key.Item1 == _currentState)
                 .SelectMany(state => state.Value ?? []).ToList();
             _currentRoutes.Sort((r1, r2) => r1.Priority < r2.Priority ? -1 : 1);
-            _successfulRoutes = [];
+            _successfulPosition = null;
 
             _isFirstIteration = false;
         }
@@ -77,15 +77,28 @@ public class FiniteStateMachine : IFiniteStateMachine
             {
                 var errorAction = _currentRoutes[i].ErrorOptions.Action;
                 // todo: учитывать route.ErrorOptions
-                newErrors.Add(new RouteError()
+
+                if (errorAction == RouteErrorAction.RollBack)
                 {
-                    StartIndex = _startIndex,
-                    Position = symbolIndex,
-                    EndState = _currentRoutes[i].EndState,
-                    StartState = _currentRoutes[i].StartState,
-                    Length = _length,
-                    Text = _currentRoutes[i].ErrorMessage
-                });
+                    if (_currentRoutes.Count > 1)
+                    {
+                        _currentRoutes.RemoveAt(i--);
+                        //_length--;
+                        //PutChar(symbol, symbolIndex);
+                    }
+                    else if (_successfulPosition != null)
+                    {
+                        string unseenText = _currentResult.Substring(_successfulPosition.Index + 1);
+                        _currentResult = _currentResult.Substring(0, _successfulPosition.Index + 1);
+                        _length = _successfulPosition.Index + 1;
+                        
+                        MoveToNextState(_successfulPosition.Route);
+                        for (int j = 0; j < unseenText.Length; j++)
+                        {
+                            PutChar(unseenText[j], j);
+                        }
+                    }
+                }
 
                 if (errorAction == RouteErrorAction.Skip && isErrorSymbol || errorAction == RouteErrorAction.SkipState)
                 {
@@ -103,7 +116,12 @@ public class FiniteStateMachine : IFiniteStateMachine
             {
                 if (_currentRoutes[i].Priority != _currentRoutes[0].Priority)
                 {
-                    _successfulRoutes.Add(_currentRoutes[i]);
+                    if(_successfulPosition == null)
+                        _successfulPosition = new SuccessfulPosition(_currentRoutes[i], symbolIndex);
+                    else if (_successfulPosition.Route.Priority > _currentRoutes[i].Priority)
+                        _successfulPosition = new SuccessfulPosition(_currentRoutes[i], symbolIndex);
+                    
+                    _currentRoutes.RemoveAt(i--);
                     continue;
                 }
 
@@ -115,11 +133,6 @@ public class FiniteStateMachine : IFiniteStateMachine
 
         if (_currentRoutes.Count == 0)
         {
-            if (_successfulRoutes.Count > 0)
-            {
-            }
-
-
             _errors.AddRange(newErrors);
 
             ErrorOccurred?.Invoke(this, new ErrorEventArgs() { Errors = _errors });

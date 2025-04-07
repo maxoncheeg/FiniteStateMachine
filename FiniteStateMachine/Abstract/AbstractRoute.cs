@@ -20,7 +20,7 @@ public abstract class AbstractRoute(string startState, string endState) : IRoute
     public virtual bool PutChar(char symbol)
     {
         if (!string.IsNullOrEmpty(ErrorOptions.ErrorSymbolRegexPattern) &&
-            Regex.IsMatch(ErrorOptions.ErrorSymbolRegexPattern, symbol.ToString()))
+            Regex.IsMatch(symbol.ToString(), ErrorOptions.ErrorSymbolRegexPattern))
         {
             State = RouteState.Error;
             return true;
