@@ -105,6 +105,7 @@ public class FiniteStateMachine : IFiniteStateMachine
                     MoveToNextState(_currentRoutes[i]);
                     _length--;
                     PutChar(symbol, symbolIndex);
+                    break;
                 }
 
                 if (errorAction == RouteErrorAction.Error)
