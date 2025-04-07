@@ -27,9 +27,16 @@ public class DimokWorkTests
             },
 
             new RegexSymbolRoute(@"[a-z]", "C", "C"),
-            new StringRoute(@"(", "C", "D"),
+            new StringRoute(@"(", "C", "D") 
+            {
+                Priority = 1,
+                ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
+            },
 
-            new StringRoute(@"int", "D", "E"),
+            new StringRoute(@"int", "D", "E")
+            {
+                ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"\s" }
+            },
             new StringRoute(@"char", "D", "E") { Priority = 1 },
 
             new StringRoute(@" ", "E", "F"),
@@ -45,6 +52,10 @@ public class DimokWorkTests
     [TestCase<string>("int a(char x);")]
     [TestCase<string>("vod a(int x);")]
     [TestCase<string>("voida(int x);")]
+    [TestCase<string>("lop a)char x);")]
+    [TestCase<string>("lop a))char x);")]
+    [TestCase<string>("lop achar x);")]
+    [TestCase<string>("lop achar ")]
     public void CorrectOutputLengthTest(string input)
     {
         _dimokStateMachine.Reset();
