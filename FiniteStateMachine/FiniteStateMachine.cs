@@ -104,6 +104,7 @@ public class FiniteStateMachine : IFiniteStateMachine
                 {
                     MoveToNextState(_currentRoutes[i]);
                     _length--;
+                    _currentResult = _currentResult[..^1];
                     PutChar(symbol, symbolIndex);
                     break;
                 }
