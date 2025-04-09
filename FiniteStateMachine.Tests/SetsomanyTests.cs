@@ -47,6 +47,11 @@ public class SetsomanyTests
                 ErrorMessage = "unsupported keys",
                 ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
             },
+            new StringRoute(@",", "B", "E")
+            {
+                ErrorMessage = "unsupported keys",
+                ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+            },
         ];
 
         _stateMachine = new FiniteStateMachine(states, "A", "E");
@@ -79,7 +84,7 @@ public class SetsomanyTests
         Assert.Fail();
     }
     
-    [TestCase<string, string[]>("setsomanyyeah.", [])]
+    [TestCase<string, string[]>("setsomanyyeah.", ["ErrorSymbols"])]
     [TestCase<string, string[]>("setsomanx.", ["missing space", "missing space"])]
     [TestCase<string, string[]>("set.", [])]
     public void CheckErrorsTest(string input, string[] errors)
@@ -95,7 +100,8 @@ public class SetsomanyTests
 
         _stateMachine.ErrorOccurred += (sender, args) =>
         {
-            Console.WriteLine($"(pos {args.Error.Position}): {args.Error.Text}");
+            Console.WriteLine(
+                $"(pos {args.Error.Position}): {args.Error.Text} {(args.Error.Text == StateMachineErrorType.ErrorSymbols.ToString() ? " -> " + args.Error.ErrorSymbols : "")}");
 
             if (args.Error.Text == string.Empty)
             {
@@ -116,5 +122,4 @@ public class SetsomanyTests
         if (errorList.Count == 0) Assert.Pass();
         else Assert.Fail();
     }
-    
 }

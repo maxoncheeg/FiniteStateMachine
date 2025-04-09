@@ -12,8 +12,11 @@ public class FiniteStateMachine : IFiniteStateMachine
 
     private int _startIndex;
     private int _length;
+    
     private string _currentState;
     private string _currentResult = string.Empty;
+   // private string _errorSymbols = string.Empty;
+    
     private bool _inProgress;
     private bool _isFirstIteration = true;
 
@@ -21,6 +24,7 @@ public class FiniteStateMachine : IFiniteStateMachine
     private readonly Dictionary<(string, string), IList<IRoute>?> _states;
 
     private List<IRoute> _currentRoutes = [];
+    private Dictionary<IRoute, string> _errorSymbols;
     private ISuccessfulPosition? _successfulPosition = null;
 
     public IReadOnlyDictionary<(string, string), IList<IRoute>?> States => _states;
@@ -56,6 +60,7 @@ public class FiniteStateMachine : IFiniteStateMachine
             _successfulPosition = null;
 
             _isFirstIteration = false;
+            _errorSymbols = [];
         }
 
         if (_inProgress == false)
@@ -98,6 +103,12 @@ public class FiniteStateMachine : IFiniteStateMachine
                     }
                 }
 
+                if (errorAction == RouteErrorAction.Skip)
+                {
+                    _errorSymbols.TryAdd(_currentRoutes[i], string.Empty);
+                    _errorSymbols[_currentRoutes[i]] += symbol;
+                }
+
                 if (errorAction == RouteErrorAction.Skip && isErrorSymbol || errorAction == RouteErrorAction.SkipState)
                 {
                     // newErrors.Add(new RouteError()
@@ -118,6 +129,9 @@ public class FiniteStateMachine : IFiniteStateMachine
                         Route = _currentRoutes[i].ToString() ?? string.Empty,
                     }));
 
+                    if(_errorSymbols.ContainsKey(_currentRoutes[i]))
+                        _errorSymbols.Remove(_currentRoutes[i]);
+                    
                     MoveToNextState(_currentRoutes[i]);
 
                     _length--;
@@ -152,7 +166,7 @@ public class FiniteStateMachine : IFiniteStateMachine
                     _currentRoutes.RemoveAt(i--);
                     continue;
                 }
-
+                
                 MoveToNextState(_currentRoutes[i]);
 
                 break;
@@ -187,6 +201,20 @@ public class FiniteStateMachine : IFiniteStateMachine
 
     private void MoveToNextState(IRoute route)
     {
+        if (_errorSymbols.ContainsKey(route))
+        {
+            ErrorOccurred?.Invoke(this, new ErrorEventArgs(new RouteError()
+            {
+                StartState = _currentRoutes[0].StartState,
+                EndState = _currentRoutes[0].EndState,
+                Position = _currentResult.Length - _errorSymbols[route].Length - 1,
+                Text = StateMachineErrorType.ErrorSymbols.ToString(),
+                Route = route.ToString() ?? string.Empty,
+                ErrorSymbols = _errorSymbols[route],
+                Result = _currentResult
+            }));
+        }
+        
         _currentState = route.EndState;
         _isFirstIteration = true;
 

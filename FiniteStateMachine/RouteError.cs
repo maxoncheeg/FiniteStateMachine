@@ -10,4 +10,5 @@ public class RouteError : IRouteError
     public string EndState { get; init; } = string.Empty;
     public string Route { get; init; } = string.Empty;
     public string Text { get; init; } = string.Empty;
+    public string ErrorSymbols { get; init; } = string.Empty;
 }

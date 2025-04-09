@@ -8,4 +8,5 @@ public interface IRouteError
     public string EndState { get; init; }
     public string Route { get; init; }
     public string Text { get; init; }
+    public string ErrorSymbols { get; init; }
 }
