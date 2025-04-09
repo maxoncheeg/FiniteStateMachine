@@ -12,15 +12,19 @@ public class FiniteStateMachine : IFiniteStateMachine
 
     private int _startIndex;
     private int _length;
+    
     private string _currentState;
     private string _currentResult = string.Empty;
+   // private string _errorSymbols = string.Empty;
+    
     private bool _inProgress;
     private bool _isFirstIteration = true;
 
-    private readonly List<IRouteError> _errors = [];
+    //private readonly List<IRouteError> _errors = [];
     private readonly Dictionary<(string, string), IList<IRoute>?> _states;
 
     private List<IRoute> _currentRoutes = [];
+    private Dictionary<IRoute, string> _errorSymbols;
     private ISuccessfulPosition? _successfulPosition = null;
 
     public IReadOnlyDictionary<(string, string), IList<IRoute>?> States => _states;
@@ -56,6 +60,7 @@ public class FiniteStateMachine : IFiniteStateMachine
             _successfulPosition = null;
 
             _isFirstIteration = false;
+            _errorSymbols = [];
         }
 
         if (_inProgress == false)
@@ -83,15 +88,13 @@ public class FiniteStateMachine : IFiniteStateMachine
                     if (_currentRoutes.Count > 1)
                     {
                         _currentRoutes.RemoveAt(i--);
-                        //_length--;
-                        //PutChar(symbol, symbolIndex);
                     }
                     else if (_successfulPosition != null)
                     {
                         string unseenText = _currentResult.Substring(_successfulPosition.Index + 1);
                         _currentResult = _currentResult.Substring(0, _successfulPosition.Index + 1);
                         _length = _successfulPosition.Index + 1;
-                        
+
                         MoveToNextState(_successfulPosition.Route);
                         for (int j = 0; j < unseenText.Length; j++)
                         {
@@ -100,9 +103,37 @@ public class FiniteStateMachine : IFiniteStateMachine
                     }
                 }
 
+                if (errorAction == RouteErrorAction.Skip)
+                {
+                    _errorSymbols.TryAdd(_currentRoutes[i], string.Empty);
+                    _errorSymbols[_currentRoutes[i]] += symbol;
+                }
+
                 if (errorAction == RouteErrorAction.Skip && isErrorSymbol || errorAction == RouteErrorAction.SkipState)
                 {
+                    // newErrors.Add(new RouteError()
+                    // {
+                    //     StartState = _currentRoutes[i].StartState,
+                    //     EndState = _currentRoutes[i].EndState,
+                    //     Position = symbolIndex,
+                    //     Text = _currentRoutes[i].ErrorMessage,
+                    //     Route = _currentRoutes[i].ToString() ?? string.Empty,
+                    // });
+
+                    ErrorOccurred?.Invoke(this, new ErrorEventArgs(new RouteError
+                    {
+                        StartState = _currentRoutes[i].StartState,
+                        EndState = _currentRoutes[i].EndState,
+                        Position = symbolIndex,
+                        Text = _currentRoutes[i].ErrorMessage,
+                        Route = _currentRoutes[i].ToString() ?? string.Empty,
+                    }));
+
+                    if(_errorSymbols.ContainsKey(_currentRoutes[i]))
+                        _errorSymbols.Remove(_currentRoutes[i]);
+                    
                     MoveToNextState(_currentRoutes[i]);
+
                     _length--;
                     _currentResult = _currentResult[..^1];
                     PutChar(symbol, symbolIndex);
@@ -111,6 +142,15 @@ public class FiniteStateMachine : IFiniteStateMachine
 
                 if (errorAction == RouteErrorAction.Error)
                 {
+                    newErrors.Add(new RouteError()
+                    {
+                        StartState = _currentRoutes[i].StartState,
+                        EndState = _currentRoutes[i].EndState,
+                        Position = symbolIndex,
+                        Text = _currentRoutes[i].ErrorMessage,
+                        Route = _currentRoutes[i].ToString() ?? string.Empty,
+                    });
+                    
                     _currentRoutes.RemoveAt(i--);
                 }
             }
@@ -118,15 +158,15 @@ public class FiniteStateMachine : IFiniteStateMachine
             {
                 if (_currentRoutes[i].Priority != _currentRoutes[0].Priority)
                 {
-                    if(_successfulPosition == null)
+                    if (_successfulPosition == null)
                         _successfulPosition = new SuccessfulPosition(_currentRoutes[i], symbolIndex);
                     else if (_successfulPosition.Route.Priority > _currentRoutes[i].Priority)
                         _successfulPosition = new SuccessfulPosition(_currentRoutes[i], symbolIndex);
-                    
+
                     _currentRoutes.RemoveAt(i--);
                     continue;
                 }
-
+                
                 MoveToNextState(_currentRoutes[i]);
 
                 break;
@@ -135,10 +175,12 @@ public class FiniteStateMachine : IFiniteStateMachine
 
         if (_currentRoutes.Count == 0)
         {
-            _errors.AddRange(newErrors);
+            foreach (var error in newErrors)
+            {
+                ErrorOccurred?.Invoke(this, new ErrorEventArgs(error));
+            }
 
-            ErrorOccurred?.Invoke(this, new ErrorEventArgs() { Errors = _errors });
-            _errors.Clear();
+            //_errors.Clear();
 
             var inProgress = _inProgress;
             ResetRoutes();
@@ -159,6 +201,20 @@ public class FiniteStateMachine : IFiniteStateMachine
 
     private void MoveToNextState(IRoute route)
     {
+        if (_errorSymbols.ContainsKey(route))
+        {
+            ErrorOccurred?.Invoke(this, new ErrorEventArgs(new RouteError()
+            {
+                StartState = _currentRoutes[0].StartState,
+                EndState = _currentRoutes[0].EndState,
+                Position = _currentResult.Length - _errorSymbols[route].Length - 1,
+                Text = StateMachineErrorType.ErrorSymbols.ToString(),
+                Route = route.ToString() ?? string.Empty,
+                ErrorSymbols = _errorSymbols[route],
+                Result = _currentResult
+            }));
+        }
+        
         _currentState = route.EndState;
         _isFirstIteration = true;
 

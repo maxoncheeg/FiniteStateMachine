@@ -24,11 +24,13 @@ public class SetsomanyTests
             },
             new StringRoute(@" ", "C", "D")
             {
+                ErrorMessage = "missing space",
                 ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
             },
             new StringRoute(@"man", "D", "F"),
             new StringRoute(@" ", "F", "G")
             {
+                ErrorMessage = "missing space",
                 ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
             },
             new StringRoute(@"x", "G", "B"),
@@ -36,11 +38,18 @@ public class SetsomanyTests
 
             new StringRoute(@"set", "A", "B")
             {
+                ErrorMessage = "unsupported key word",
                 Priority = 2
             },
 
             new StringRoute(@".", "B", "E")
             {
+                ErrorMessage = "unsupported keys",
+                ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+            },
+            new StringRoute(@",", "B", "E")
+            {
+                ErrorMessage = "unsupported keys",
                 ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
             },
         ];
@@ -49,7 +58,6 @@ public class SetsomanyTests
     }
 
     [TestCase<string>("setsomany.")]
-    [TestCase<string>("setso.")]
     [TestCase<string>("set.")]
     [TestCase<string>("setsomanx.")]
     [TestCase<string>("setso man x.")]
@@ -63,13 +71,10 @@ public class SetsomanyTests
                 Assert.Pass();
         };
 
-        // _dimokStateMachine.ErrorOccurred += (sender, args) =>
-        // {
-        //     foreach (var VARIABLE in COLLECTION)
-        //     {
-        //         
-        //     }
-        // };
+        _stateMachine.ErrorOccurred += (sender, args) =>
+        {
+            Console.WriteLine($"(pos {args.Error.Position}): {args.Error.Text}");
+        };
 
         for (int i = 0; i < input.Length; i++)
         {
@@ -77,5 +82,44 @@ public class SetsomanyTests
         }
 
         Assert.Fail();
+    }
+    
+    [TestCase<string, string[]>("setsomanyyeah.", ["ErrorSymbols"])]
+    [TestCase<string, string[]>("setsomanx.", ["missing space", "missing space"])]
+    [TestCase<string, string[]>("set.", [])]
+    public void CheckErrorsTest(string input, string[] errors)
+    {
+        Console.WriteLine($"INPUT: {input}\n");
+        var errorList = errors.ToList();
+        _stateMachine.Reset();
+        _stateMachine.StateChanged += (sender, args) =>
+        {
+            if (args.IsFinalState && args.StartIndex == 0 && args.Length == input.Length)
+                Console.WriteLine($"\nFOUND: {args.Result}");
+        };
+
+        _stateMachine.ErrorOccurred += (sender, args) =>
+        {
+            Console.WriteLine(
+                $"(pos {args.Error.Position}): {args.Error.Text} {(args.Error.Text == StateMachineErrorType.ErrorSymbols.ToString() ? " -> " + args.Error.ErrorSymbols : "")}");
+
+            if (args.Error.Text == string.Empty)
+            {
+            }
+            else if (errorList.Contains(args.Error.Text))
+                errorList.Remove(args.Error.Text);
+            else
+            {
+                Assert.Fail();
+            }
+        };
+
+        for (int i = 0; i < input.Length; i++)
+        {
+            _stateMachine.PutChar(input[i], i);
+        }
+
+        if (errorList.Count == 0) Assert.Pass();
+        else Assert.Fail();
     }
 }

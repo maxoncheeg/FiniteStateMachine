@@ -2,7 +2,7 @@
 
 namespace FiniteStateMachine.EventArgs;
 
-public class ErrorEventArgs : System.EventArgs
+public class ErrorEventArgs(IRouteError error) : System.EventArgs
 {
-    public IList<IRouteError> Errors { get; init; } = [];
+    public IRouteError Error { get; set; } = error;
 }
