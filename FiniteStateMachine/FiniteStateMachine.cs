@@ -17,7 +17,7 @@ public class FiniteStateMachine : IFiniteStateMachine
     private bool _inProgress;
     private bool _isFirstIteration = true;
 
-    private readonly List<IRouteError> _errors = [];
+    //private readonly List<IRouteError> _errors = [];
     private readonly Dictionary<(string, string), IList<IRoute>?> _states;
 
     private List<IRoute> _currentRoutes = [];
@@ -83,15 +83,13 @@ public class FiniteStateMachine : IFiniteStateMachine
                     if (_currentRoutes.Count > 1)
                     {
                         _currentRoutes.RemoveAt(i--);
-                        //_length--;
-                        //PutChar(symbol, symbolIndex);
                     }
                     else if (_successfulPosition != null)
                     {
                         string unseenText = _currentResult.Substring(_successfulPosition.Index + 1);
                         _currentResult = _currentResult.Substring(0, _successfulPosition.Index + 1);
                         _length = _successfulPosition.Index + 1;
-                        
+
                         MoveToNextState(_successfulPosition.Route);
                         for (int j = 0; j < unseenText.Length; j++)
                         {
@@ -102,7 +100,26 @@ public class FiniteStateMachine : IFiniteStateMachine
 
                 if (errorAction == RouteErrorAction.Skip && isErrorSymbol || errorAction == RouteErrorAction.SkipState)
                 {
+                    // newErrors.Add(new RouteError()
+                    // {
+                    //     StartState = _currentRoutes[i].StartState,
+                    //     EndState = _currentRoutes[i].EndState,
+                    //     Position = symbolIndex,
+                    //     Text = _currentRoutes[i].ErrorMessage,
+                    //     Route = _currentRoutes[i].ToString() ?? string.Empty,
+                    // });
+
+                    ErrorOccurred?.Invoke(this, new ErrorEventArgs(new RouteError
+                    {
+                        StartState = _currentRoutes[i].StartState,
+                        EndState = _currentRoutes[i].EndState,
+                        Position = symbolIndex,
+                        Text = _currentRoutes[i].ErrorMessage,
+                        Route = _currentRoutes[i].ToString() ?? string.Empty,
+                    }));
+
                     MoveToNextState(_currentRoutes[i]);
+
                     _length--;
                     _currentResult = _currentResult[..^1];
                     PutChar(symbol, symbolIndex);
@@ -111,6 +128,15 @@ public class FiniteStateMachine : IFiniteStateMachine
 
                 if (errorAction == RouteErrorAction.Error)
                 {
+                    newErrors.Add(new RouteError()
+                    {
+                        StartState = _currentRoutes[i].StartState,
+                        EndState = _currentRoutes[i].EndState,
+                        Position = symbolIndex,
+                        Text = _currentRoutes[i].ErrorMessage,
+                        Route = _currentRoutes[i].ToString() ?? string.Empty,
+                    });
+                    
                     _currentRoutes.RemoveAt(i--);
                 }
             }
@@ -118,11 +144,11 @@ public class FiniteStateMachine : IFiniteStateMachine
             {
                 if (_currentRoutes[i].Priority != _currentRoutes[0].Priority)
                 {
-                    if(_successfulPosition == null)
+                    if (_successfulPosition == null)
                         _successfulPosition = new SuccessfulPosition(_currentRoutes[i], symbolIndex);
                     else if (_successfulPosition.Route.Priority > _currentRoutes[i].Priority)
                         _successfulPosition = new SuccessfulPosition(_currentRoutes[i], symbolIndex);
-                    
+
                     _currentRoutes.RemoveAt(i--);
                     continue;
                 }
@@ -135,10 +161,12 @@ public class FiniteStateMachine : IFiniteStateMachine
 
         if (_currentRoutes.Count == 0)
         {
-            _errors.AddRange(newErrors);
+            foreach (var error in newErrors)
+            {
+                ErrorOccurred?.Invoke(this, new ErrorEventArgs(error));
+            }
 
-            ErrorOccurred?.Invoke(this, new ErrorEventArgs() { Errors = _errors });
-            _errors.Clear();
+            //_errors.Clear();
 
             var inProgress = _inProgress;
             ResetRoutes();

@@ -59,7 +59,6 @@ public class UrlFiniteStateMachineTests
     [TestCase<string>("https://a.ru ")]
     [TestCase<string>("http://a.ru ")]
     [TestCase<string>("www.a.ru ")]
-    [TestCase<string>("www://.a.ru ")]
     [TestCase<string>("a.ru ")]
     [TestCase<string>("123.ru ")]
     [TestCase<string>("https://www.wildberries.ru/catalog/139365379/detail.aspx?size=236601874 ")]
