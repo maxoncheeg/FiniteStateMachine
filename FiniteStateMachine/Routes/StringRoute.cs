@@ -15,8 +15,7 @@ public class StringRoute : AbstractRoute
 
     public override bool PutChar(char symbol)
     {
-        if(base.PutChar(symbol))
-            return true;
+        var isErrorSymbol = base.PutChar(symbol);
         
         if (_index >= _word.Length)
         {
@@ -35,6 +34,12 @@ public class StringRoute : AbstractRoute
         {
             _index++;
             State =  RouteState.IsProgress;
+        }
+        
+        if (State != RouteState.Completed && isErrorSymbol)
+        {
+            State = RouteState.Error;
+            return true;
         }
 
         return false;

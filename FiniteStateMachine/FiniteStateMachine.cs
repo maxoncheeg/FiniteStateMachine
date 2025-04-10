@@ -72,6 +72,9 @@ public class FiniteStateMachine : IFiniteStateMachine
 
         List<IRouteError> newErrors = [];
         _currentResult += symbol;
+        
+        if(_currentState == "B")
+            Console.WriteLine("A");
 
         _length++;
         for (int i = 0; i < _currentRoutes.Count; i++)
@@ -132,8 +135,10 @@ public class FiniteStateMachine : IFiniteStateMachine
                     if(_errorSymbols.ContainsKey(_currentRoutes[i]))
                         _errorSymbols.Remove(_currentRoutes[i]);
                     
+                    
                     MoveToNextState(_currentRoutes[i]);
-
+                    //if (_currentRoutes[i].EndState == _endState) return 0;
+                    
                     _length--;
                     _currentResult = _currentResult[..^1];
                     PutChar(symbol, symbolIndex);
