@@ -22,7 +22,6 @@ public abstract class AbstractRoute(string startState, string endState) : IRoute
         if (!string.IsNullOrEmpty(ErrorOptions.ErrorSymbolRegexPattern) &&
             Regex.IsMatch(symbol.ToString(), ErrorOptions.ErrorSymbolRegexPattern))
         {
-            State = RouteState.Error;
             return true;
         }
 

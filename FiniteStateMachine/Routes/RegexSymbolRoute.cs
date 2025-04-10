@@ -15,8 +15,7 @@ public class RegexSymbolRoute : AbstractRoute
 
     public override bool PutChar(char symbol)
     {
-        if (base.PutChar(symbol))
-            return true;
+        var isErrorSymbol = base.PutChar(symbol);
 
         if (Regex.IsMatch(symbol.ToString(), _pattern))
         {
@@ -24,6 +23,12 @@ public class RegexSymbolRoute : AbstractRoute
         }
         else
             State = RouteState.Error;
+        
+        if (State != RouteState.Completed && isErrorSymbol)
+        {
+            State = RouteState.Error;
+            return true;
+        }
 
         return false;
     }
