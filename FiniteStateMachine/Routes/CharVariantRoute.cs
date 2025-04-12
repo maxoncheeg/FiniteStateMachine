@@ -12,9 +12,9 @@ public class CharVariantRoute : AbstractRoute
         _chars = chars;
     }
 
-    public override bool PutChar(char symbol)
+    public override void PutChar(char symbol)
     {
-        var isErrorSymbol = base.PutChar(symbol);
+        base.PutChar(symbol);
         
         if (_chars.Any(@char => @char == symbol))
         {
@@ -22,14 +22,6 @@ public class CharVariantRoute : AbstractRoute
         }
         else
             State = RouteState.Error;
-
-        if (State != RouteState.Completed && isErrorSymbol)
-        {
-            State = RouteState.Error;
-            return true;
-        }
-
-        return false;
     }
 
     public override string ToString()

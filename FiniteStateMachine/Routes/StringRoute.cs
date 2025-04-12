@@ -13,9 +13,9 @@ public class StringRoute : AbstractRoute
         _word = word;
     }
 
-    public override bool PutChar(char symbol)
+    public override void PutChar(char symbol)
     {
-        var isErrorSymbol = base.PutChar(symbol);
+        base.PutChar(symbol);
         
         if (_index >= _word.Length)
         {
@@ -35,14 +35,6 @@ public class StringRoute : AbstractRoute
             _index++;
             State =  RouteState.IsProgress;
         }
-        
-        if (State != RouteState.Completed && isErrorSymbol)
-        {
-            State = RouteState.Error;
-            return true;
-        }
-
-        return false;
     }
 
     public override void Reset()

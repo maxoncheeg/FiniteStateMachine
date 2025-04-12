@@ -37,6 +37,9 @@ public class AbobaTests
     }
 
     [TestCase<string>("abobalol.")]
+    [TestCase<string>(",")]
+    [TestCase<string>("aboba,")]
+    [TestCase<string>("lol !")]
     public void CorrectOutputLengthTest(string input)
     {
         _stateMachine.Reset();
@@ -48,7 +51,7 @@ public class AbobaTests
 
         _stateMachine.ErrorOccurred += (sender, args) =>
         {
-            Console.WriteLine($"(pos {args.Error.Position}): {args.Error.Text} {args.Error.ErrorSymbols}");
+            Console.WriteLine($"(pos {args.Error.Position}): {args.Error.Text}");
         };
 
         for (int i = 0; i < input.Length; i++)

@@ -5,13 +5,15 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.1.1</Version>
+        <Version>0.1.2</Version>
         <Title>Finite state machine class library</Title>
         <Authors>maxoncheeg</Authors>
         <Description>With this pachage you can configure your state machine</Description>
         <RepositoryUrl>https://github.com/maxoncheeg/FiniteStateMachine</RepositoryUrl>
         <RepositoryType>public</RepositoryType>
-        <PackageReleaseNotes>Beta testing</PackageReleaseNotes>
+        <PackageReleaseNotes>Fixes:
+    - Fix infinite loop around one bad symbol
+    - Refactor routes. Now it has property 'HasErrorSymbols'. It helps safely extends of AbstractRoute, but you need to execute the base PutChar method.</PackageReleaseNotes>
         <PackageId>maxoncheeg.FiniteStateMachine</PackageId>
     </PropertyGroup>
 

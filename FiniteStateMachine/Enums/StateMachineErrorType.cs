@@ -2,5 +2,6 @@
 
 public enum StateMachineErrorType
 {
+    Text,
     ErrorSymbols,
 }

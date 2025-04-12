@@ -84,7 +84,7 @@ public class SetsomanyTests
         Assert.Fail();
     }
     
-    [TestCase<string, string[]>("setsomanyyeah.", ["ErrorSymbols"])]
+    [TestCase<string, string[]>("setsomanyyeah.", ["yeah"])]
     [TestCase<string, string[]>("setsomanx.", ["missing space", "missing space"])]
     [TestCase<string, string[]>("set.", [])]
     public void CheckErrorsTest(string input, string[] errors)
@@ -101,7 +101,7 @@ public class SetsomanyTests
         _stateMachine.ErrorOccurred += (sender, args) =>
         {
             Console.WriteLine(
-                $"(pos {args.Error.Position}): {args.Error.Text} {(args.Error.Text == StateMachineErrorType.ErrorSymbols.ToString() ? " -> " + args.Error.ErrorSymbols : "")}");
+                $"(pos {args.Error.Position}): {args.Error.Text}");
 
             if (args.Error.Text == string.Empty)
             {
