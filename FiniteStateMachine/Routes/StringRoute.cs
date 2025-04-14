@@ -3,49 +3,48 @@ using FiniteStateMachine.Enums;
 
 namespace FiniteStateMachine.Routes;
 
-public class StringRoute : AbstractRoute
+public class StringRoute(string word, string startState, string endState) : AbstractRoute(startState, endState)
 {
-    private readonly string _word;
-    private int _index = 0;
-
-    public StringRoute(string word, string startState, string endState) : base(startState, endState)
-    {
-        _word = word;
-    }
+    private int _index;
 
     public override void PutChar(char symbol)
     {
         base.PutChar(symbol);
-        
-        if (_index >= _word.Length)
+
+        if (_index >= word.Length)
         {
-            State =  RouteState.Error;
+            State = RouteState.Error;
         }
 
-        if (symbol == _word[_index] && _index == _word.Length - 1)
+        if (symbol == word[_index] && _index == word.Length - 1)
         {
-            State =  RouteState.Completed;
+            State = RouteState.Completed;
         }
-        else if (symbol != _word[_index])
+        else if (symbol != word[_index])
         {
-            State =  RouteState.Error;
+            State = RouteState.Error;
         }
         else
         {
             _index++;
-            State =  RouteState.IsProgress;
+            State = RouteState.IsProgress;
         }
+    }
+
+    public override double GetPercentage()
+    {
+        return (double)_index / (word.Length - 1);
     }
 
     public override void Reset()
     {
         base.Reset();
-        
+
         _index = 0;
     }
-    
+
     public override string ToString()
     {
-        return _word;
+        return word;
     }
 }

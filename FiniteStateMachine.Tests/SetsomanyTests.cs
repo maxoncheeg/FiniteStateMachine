@@ -42,14 +42,34 @@ public class SetsomanyTests
                 Priority = 2
             },
 
+            new StringRoute(@"get", "A", "N")
+            {
+                ErrorMessage = "unsupported key word",
+                Priority = 2
+            },
+
+            new StringRoute(@"color", "N", "B")
+            {
+                ErrorMessage = "color err",
+                ErrorOptions = new RouteErrorOptions
+                    { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\.\,]" }
+            },
+            new StringRoute(@"height", "N", "B")
+            {
+                ErrorMessage = "height err",
+                ErrorOptions = new RouteErrorOptions
+                    { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\.\,]" }
+            },
+
+
             new StringRoute(@".", "B", "E")
             {
-                ErrorMessage = "unsupported keys",
+                ErrorMessage = "missing .",
                 ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
             },
             new StringRoute(@",", "B", "E")
             {
-                ErrorMessage = "unsupported keys",
+                ErrorMessage = "missing ,",
                 ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
             },
         ];
@@ -62,13 +82,20 @@ public class SetsomanyTests
     [TestCase<string>("setsomanx.")]
     [TestCase<string>("setso man x.")]
     [TestCase<string>("setsomanyyeah.")]
+    [TestCase<string>("getcolor.")]
+    [TestCase<string>("getheight.")]
     public void CorrectOutputLengthTest(string input)
     {
         _stateMachine.Reset();
+
+        var text = "setsomanx.";
+
         _stateMachine.StateChanged += (sender, args) =>
         {
             if (args.IsFinalState && args.StartIndex == 0 && args.Length == input.Length)
                 Assert.Pass();
+
+            // here you can do something
         };
 
         _stateMachine.ErrorOccurred += (sender, args) =>
@@ -83,9 +110,13 @@ public class SetsomanyTests
 
         Assert.Fail();
     }
-    
+
     [TestCase<string, string[]>("setsomanyyeah.", ["yeah"])]
     [TestCase<string, string[]>("setsomanx.", ["missing space", "missing space"])]
+    [TestCase<string, string[]>("getcolr.", ["color err"])]
+    [TestCase<string, string[]>("gethegdsit.", ["height err"])]
+    [TestCase<string, string[]>("getcolheight.", ["col"])]
+    [TestCase<string, string[]>("getheicolog.", ["color err"])]
     [TestCase<string, string[]>("set.", [])]
     public void CheckErrorsTest(string input, string[] errors)
     {

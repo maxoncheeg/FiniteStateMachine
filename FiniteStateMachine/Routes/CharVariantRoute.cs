@@ -3,32 +3,26 @@ using FiniteStateMachine.Enums;
 
 namespace FiniteStateMachine.Routes;
 
-public class CharVariantRoute : AbstractRoute
+public class CharVariantRoute(IList<char> chars, string startState, string endState)
+    : AbstractRoute(startState, endState)
 {
-    private readonly IList<char> _chars;
-
-    public CharVariantRoute(IList<char> chars, string startState, string endState) : base(startState, endState)
-    {
-        _chars = chars;
-    }
-
     public override void PutChar(char symbol)
     {
         base.PutChar(symbol);
-        
-        if (_chars.Any(@char => @char == symbol))
-        {
-            State = RouteState.Completed;
-        }
-        else
-            State = RouteState.Error;
+
+        State = chars.Any(@char => @char == symbol) ? RouteState.Completed : RouteState.Error;
+    }
+
+    public override double GetPercentage()
+    {
+        return State == RouteState.Completed ? 1.0 : 0.0;
     }
 
     public override string ToString()
     {
         string result = string.Empty;
 
-        foreach (var @char in _chars)
+        foreach (var @char in chars)
             result += @char == '\n' ? "\\n" : @char;
 
         return result;

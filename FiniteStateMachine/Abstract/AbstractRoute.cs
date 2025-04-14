@@ -27,8 +27,11 @@ public abstract class AbstractRoute(string startState, string endState) : IRoute
         }
     }
 
+    public abstract double GetPercentage();
+
     public virtual void Reset()
     {
+        HasErrorSymbols = false;
         State = RouteState.NotStarted;
     }
 }

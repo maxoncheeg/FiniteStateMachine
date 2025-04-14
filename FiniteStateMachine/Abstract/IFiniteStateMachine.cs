@@ -8,7 +8,9 @@ public interface IFiniteStateMachine
     public IReadOnlyDictionary<(string, string), IList<IRoute>?> States { get; }
     public event EventHandler<StateEventArgs> StateChanged;
     public event EventHandler<ErrorEventArgs> ErrorOccurred;
-    
+
+    public bool ResetRoutesIfStartStateHasErrorSymbolsAtStart { get; set; }
+
     public int PutChar(char symbol, int index);
     public int PutString(string value);
     public void Reset();

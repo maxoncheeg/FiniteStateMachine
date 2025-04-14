@@ -18,5 +18,6 @@ public interface IRoute
     /// <param name="symbol"></param>
     /// <returns>Если путь встретит запрещенный ErrorOptions символ, вернется true</returns>
     public void PutChar(char symbol);
+    public double GetPercentage();
     public void Reset();
 }

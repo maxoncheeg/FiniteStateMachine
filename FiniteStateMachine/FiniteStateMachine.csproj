@@ -5,15 +5,16 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.1.2</Version>
+        <Version>0.2.0</Version>
         <Title>Finite state machine class library</Title>
         <Authors>maxoncheeg</Authors>
         <Description>With this pachage you can configure your state machine</Description>
         <RepositoryUrl>https://github.com/maxoncheeg/FiniteStateMachine</RepositoryUrl>
         <RepositoryType>public</RepositoryType>
         <PackageReleaseNotes>Fixes:
-    - Fix infinite loop around one bad symbol
-    - Refactor routes. Now it has property 'HasErrorSymbols'. It helps safely extends of AbstractRoute, but you need to execute the base PutChar method.</PackageReleaseNotes>
+    - Add GetPercentage to IRoute. Use it to give coef. from 0 to 1 that means percentage of completion. State machine use it to determine way with the best percentage in case when they have same priorities.
+    - Fix Result string after reset.
+    - Add bool ResetRoutesIfStartStateHasErrorSymbolsAtStart</PackageReleaseNotes>
         <PackageId>maxoncheeg.FiniteStateMachine</PackageId>
     </PropertyGroup>
 

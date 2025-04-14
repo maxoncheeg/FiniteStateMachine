@@ -4,29 +4,22 @@ using FiniteStateMachine.Enums;
 
 namespace FiniteStateMachine.Routes;
 
-public class RegexSymbolRoute : AbstractRoute
+public class RegexSymbolRoute(string pattern, string startState, string endState) : AbstractRoute(startState, endState)
 {
-    private readonly string _pattern;
-
-    public RegexSymbolRoute(string pattern, string startState, string endState) : base(startState, endState)
-    {
-        _pattern = pattern;
-    }
-
     public override void PutChar(char symbol)
     {
         base.PutChar(symbol);
 
-        if (Regex.IsMatch(symbol.ToString(), _pattern))
-        {
-            State = RouteState.Completed;
-        }
-        else
-            State = RouteState.Error;
+        State = Regex.IsMatch(symbol.ToString(), pattern) ? RouteState.Completed : RouteState.Error;
+    }
+
+    public override double GetPercentage()
+    {
+        return State == RouteState.Completed ? 1.0 : 0.0;
     }
 
     public override string ToString()
     {
-        return _pattern;
+        return pattern;
     }
 }

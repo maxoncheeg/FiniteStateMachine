@@ -5,123 +5,150 @@ using FiniteStateMachine.Abstract;
 using FiniteStateMachine.Enums;
 using FiniteStateMachine.Routes;
 
-List<IRoute> states =
+List<IRoute> routes =
 [
     new StringRoute(@"ask", "A", "AS")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s\[]" }
+        ErrorMessage = "Ожидается ключевое слово: ask.",
+        ErrorOptions = new RouteErrorOptions
+            { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s\[\]]" }
     },
     new StringRoute(@" ", "AS", "T")
     {
+        ErrorMessage = "Ожидается пробел.",
         ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
     },
     new StringRoute(@"turtles", "T", "I")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s\[]" }
+        ErrorMessage = "Ожидается ключевое слово: turtles.",
+        ErrorOptions = new RouteErrorOptions
+            { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s\[\]]" }
     },
     new StringRoute(@"[", "I", "C")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
+        ErrorMessage = "Ожидается открывающаяся квадратная скобка.",
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\w]" }
     },
-    
+
     new StringRoute(@"set", "C", "CS")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Возможно имелась ввиду команда set.",
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s\]]" }
     },
     new StringRoute(@" ", "CS", "P")
     {
+        ErrorMessage = "Ожидается пробел.",
         ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
     },
-    
+
     new StringRoute(@"color", "P", "PS")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Возможно имелось ввиду свойство color.",
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s\]]" }
     },
     new StringRoute(@" ", "PS", "R")
     {
+        ErrorMessage = "Ожидается пробел.",
         ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
     },
     new StringRoute(@"red", "R", "E")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Разрешенные объявленные цвета: red, green, blue.",
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s\]\,]" }
     },
     new StringRoute(@"green", "R", "E")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Разрешенные объявленные цвета: red, green, blue.",
+        //ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip,  ErrorSymbolRegexPattern = @"[\s\]]" }
     },
     new StringRoute(@"blue", "R", "E")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Разрешенные объявленные цвета: red, green, blue.",
+        //ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip,  ErrorSymbolRegexPattern = @"[\s\]]" }
     },
-    
+
     new StringRoute(@"heading", "P", "VS")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Возможно имелось ввиду свойство heading.",
+        //ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip,  ErrorSymbolRegexPattern = @"[\s]" }
     },
-    
-    
+
+
     new StringRoute(@"forward", "C", "VS")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Возможно имелось ввиду направление forward.",
+        //ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
     },
     new StringRoute(@"back", "C", "VS")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Возможно имелось ввиду направление back.",
+        //ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
     },
     new StringRoute(@"left", "C", "VS")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Возможно имелось ввиду направление left.",
+        //ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
     },
     new StringRoute(@"right", "C", "VS")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Возможно имелось ввиду направление right.",
+        // ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
     },
-    
+
     new StringRoute(@" ", "VS", "V")
     {
+        ErrorMessage = "Ожидается пробел.",
         ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
     },
-    
+
     new StringRoute(@"x", "V", "E")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Разрешенные объявленные переменные: x, y, z.",
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\,\]]" }
     },
     new StringRoute(@"y", "V", "E")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Разрешенные объявленные переменные: x, y, z.",
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\,\]]" }
     },
     new StringRoute(@"z", "V", "E")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorMessage = "Разрешенные объявленные переменные: x, y, z.",
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\,\]]" }
     },
-    
+
     new StringRoute(@"]", "E", "F")
     {
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
+        ErrorMessage = "Ожидается закрывающаяся квадратная скобка.",
+        Priority = -1,
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
     },
-    new StringRoute(@",", "E", "C")
+    new StringRoute(@",", "E", "C") // УБРАТЬ ПРОБЕЛ
     {
-        //ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
+        ErrorMessage = "Ожидается запятая.",
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\w\]]"}
     },
 ];
 
 
+IFiniteStateMachine urlStateMachine = new FiniteStateMachine.FiniteStateMachine(routes, "A", "F")
+    { ResetRoutesIfStartStateHasErrorSymbolsAtStart = true };
 
-IFiniteStateMachine urlStateMachine = new FiniteStateMachine.FiniteStateMachine(states, "A", "F");
+var text = "ask turtles[set color red] ask turtles[forward xb]ack y]";
 
-var text = "ask turtles [set heading x, back x, set color blue]";
-
-Console.Write("A -> ");
+//Console.Write("A -> ");
 urlStateMachine.StateChanged += (sender, args) =>
 {
     if (args.IsFinalState)
     {
-        Console.Write(args.CurrentState);
-        Console.WriteLine("\n" + args.Result);
+        //Console.Write(args.CurrentState);
+        Console.WriteLine("\nFIND: " + args.Result);
         return;
     }
-    Console.Write(args.CurrentState + $"({args.Route.ToString()})" + " -> ");
+    //Console.Write(args.CurrentState + $"({args.Route.ToString()})" + " -> ");
 };
+
+urlStateMachine.ErrorOccurred += (sender, args) => { Console.WriteLine($"Error({args.Error.Position}): ({args.Error.Text.ToString()})"); };
 
 for (int i = 0; i < text.Length; i++)
 {
