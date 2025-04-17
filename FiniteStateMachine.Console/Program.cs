@@ -77,22 +77,22 @@ List<IRoute> routes =
     new StringRoute(@"forward", "C", "VS")
     {
         ErrorMessage = "Возможно имелось ввиду направление forward.",
-        //ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip,  ErrorSymbolRegexPattern = @"[\s\]]" }
     },
     new StringRoute(@"back", "C", "VS")
     {
         ErrorMessage = "Возможно имелось ввиду направление back.",
-        //ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip,  ErrorSymbolRegexPattern = @"[\s\]]" }
     },
     new StringRoute(@"left", "C", "VS")
     {
         ErrorMessage = "Возможно имелось ввиду направление left.",
-        //ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip,  ErrorSymbolRegexPattern = @"[\s\]]" }
     },
     new StringRoute(@"right", "C", "VS")
     {
         ErrorMessage = "Возможно имелось ввиду направление right.",
-        // ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip,  ErrorSymbolRegexPattern = @"[\s\]]" }
     },
 
     new StringRoute(@" ", "VS", "V")
@@ -116,25 +116,30 @@ List<IRoute> routes =
         ErrorMessage = "Разрешенные объявленные переменные: x, y, z.",
         ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\,\]]" }
     },
-
+    
     new StringRoute(@"]", "E", "F")
     {
         ErrorMessage = "Ожидается закрывающаяся квадратная скобка.",
-        Priority = -1,
+        //Priority = -1,
         ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
     },
-    new StringRoute(@",", "E", "C") // УБРАТЬ ПРОБЕЛ
+    new StringRoute(@",", "E", "C")
     {
         ErrorMessage = "Ожидается запятая.",
-        ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\w\]]"}
+        Priority = -1,
+        ErrorOptions = new RouteErrorOptions
+            { Action = RouteErrorAction.RollBack }
     },
+
 ];
 
 
 IFiniteStateMachine urlStateMachine = new FiniteStateMachine.FiniteStateMachine(routes, "A", "F")
-    { ResetRoutesIfStartStateHasErrorSymbolsAtStart = true };
+    { ResetRoutesIfStartStateHasErrorSymbolsAtStart = false, AllowFindFutureWays = true };
 
-var text = "ask turtles[set color red] ask turtles[forward xb]ack y]";
+var text = "ask turtles[set forward redback x]";
+
+Console.WriteLine("INPUT:" + text);
 
 //Console.Write("A -> ");
 urlStateMachine.StateChanged += (sender, args) =>

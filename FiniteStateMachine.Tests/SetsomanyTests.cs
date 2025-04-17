@@ -27,24 +27,46 @@ public class SetsomanyTests
                 ErrorMessage = "missing space",
                 ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
             },
-            new StringRoute(@"man", "D", "F"),
+            new StringRoute(@"man", "D", "F")
+            {
+                ErrorMessage = "missing man",
+                ErrorOptions = new RouteErrorOptions
+                    { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s\.]" }
+            },
             new StringRoute(@" ", "F", "G")
             {
                 ErrorMessage = "missing space",
                 ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.SkipState }
             },
-            new StringRoute(@"x", "G", "B"),
+            new StringRoute(@"x", "G", "B")
+            {
+                ErrorMessage = "missing x",
+            },
+
+            new StringRoute(@"y", "G", "T")
+            {
+                ErrorMessage = "missing y",
+                ErrorOptions = new RouteErrorOptions
+                    { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s\.]" }
+            },
+
+            new StringRoute(@"aloha", "T", "B")
+            {
+                ErrorMessage = "missing aloha",
+                ErrorOptions = new RouteErrorOptions
+                    { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s\.]" }
+            },
 
 
             new StringRoute(@"set", "A", "B")
             {
-                ErrorMessage = "unsupported key word",
+                ErrorMessage = "set",
                 Priority = 2
             },
 
             new StringRoute(@"get", "A", "N")
             {
-                ErrorMessage = "unsupported key word",
+                ErrorMessage = "get",
                 Priority = 2
             },
 
@@ -65,17 +87,20 @@ public class SetsomanyTests
             new StringRoute(@".", "B", "E")
             {
                 ErrorMessage = "missing .",
-                ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+                ErrorOptions = new RouteErrorOptions
+                    { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s]" }
             },
             new StringRoute(@",", "B", "E")
             {
                 ErrorMessage = "missing ,",
-                ErrorOptions = new RouteErrorOptions { Action = RouteErrorAction.Skip }
+                ErrorOptions = new RouteErrorOptions
+                    { Action = RouteErrorAction.Skip, ErrorSymbolRegexPattern = @"[\s]" }
             },
         ];
 
-        _stateMachine = new FiniteStateMachine(states, "A", "E");
-    }
+        _stateMachine = new FiniteStateMachine(states, "A", "E")
+            {AllowFindFutureWays = true};
+}
 
     [TestCase<string>("setsomany.")]
     [TestCase<string>("set.")]
@@ -118,6 +143,7 @@ public class SetsomanyTests
     [TestCase<string, string[]>("getcolheight.", ["col"])]
     [TestCase<string, string[]>("getheicolog.", ["color err"])]
     [TestCase<string, string[]>("set.", [])]
+    [TestCase<string, string[]>("setso aloha.", ["missing man", "missing space", "missing y"])]
     public void CheckErrorsTest(string input, string[] errors)
     {
         Console.WriteLine($"INPUT: {input}\n");
