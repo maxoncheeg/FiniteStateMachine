@@ -5,16 +5,13 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.2.0</Version>
+        <Version>0.3.0</Version>
         <Title>Finite state machine class library</Title>
         <Authors>maxoncheeg</Authors>
         <Description>With this pachage you can configure your state machine</Description>
         <RepositoryUrl>https://github.com/maxoncheeg/FiniteStateMachine</RepositoryUrl>
         <RepositoryType>public</RepositoryType>
-        <PackageReleaseNotes>Fixes:
-    - Add GetPercentage to IRoute. Use it to give coef. from 0 to 1 that means percentage of completion. State machine use it to determine way with the best percentage in case when they have same priorities.
-    - Fix Result string after reset.
-    - Add bool ResetRoutesIfStartStateHasErrorSymbolsAtStart</PackageReleaseNotes>
+        <PackageReleaseNotes>New features</PackageReleaseNotes>
         <PackageId>maxoncheeg.FiniteStateMachine</PackageId>
     </PropertyGroup>
 

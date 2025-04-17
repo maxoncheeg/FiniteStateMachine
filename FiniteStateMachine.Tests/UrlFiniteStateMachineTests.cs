@@ -33,7 +33,7 @@ public class UrlFiniteStateMachineTests
             new CharVariantRoute(['\n', ' '], "E", "G"),
         ];
 
-        _urlStateMachine = new FiniteStateMachine(states, "A", "G");
+        _urlStateMachine = new FiniteStateMachine(states, "A", "G") {AllowFindFutureWays = true};
     }
 
     [TestCase<string>("https://a/ ")]

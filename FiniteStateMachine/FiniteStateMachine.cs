@@ -22,6 +22,7 @@ public class FiniteStateMachine : IFiniteStateMachine
     private readonly Dictionary<(string, string), IList<IRoute>?> _states;
 
     private List<IRoute> _currentRoutes = [];
+    private List<IRoute> _futureRoutes = [];
     private Dictionary<IRoute, string> _errorSymbols = [];
     private ISuccessfulPosition? _successfulPosition;
 
@@ -30,6 +31,7 @@ public class FiniteStateMachine : IFiniteStateMachine
     public event EventHandler<StateEventArgs>? StateChanged;
     public event EventHandler<ErrorEventArgs>? ErrorOccurred;
     public bool ResetRoutesIfStartStateHasErrorSymbolsAtStart { get; set; }
+    public bool AllowFindFutureWays { get; set; }
 
     public FiniteStateMachine(List<IRoute> routes, string startState, string endState)
     {
@@ -59,6 +61,12 @@ public class FiniteStateMachine : IFiniteStateMachine
             _currentRoutes.ForEach(r => r.Reset());
             _successfulPosition = null;
 
+            if (AllowFindFutureWays)
+            {
+                _futureRoutes = GetNextStates(_currentState);
+                _futureRoutes.ForEach(r => r.Reset());
+            }
+
             _isFirstIteration = false;
             _errorSymbols = [];
         }
@@ -70,8 +78,8 @@ public class FiniteStateMachine : IFiniteStateMachine
             _currentResult = string.Empty;
         }
 
-        //if(symbol == ']')
-        //    Console.WriteLine(',');
+        if(symbol == 'd')
+            Console.WriteLine(',');
 
         List<IRouteError> newErrors = [];
         _currentResult += symbol;
@@ -141,27 +149,49 @@ public class FiniteStateMachine : IFiniteStateMachine
                         return 0;
                     }
 
-                    var otherRoutes = _currentRoutes
-                        .Where(r => r != currentRoute && r.Priority == currentRoute.Priority).ToList();
-                    otherRoutes.Sort((r1, r2) => r1.GetPercentage().CompareTo(r2.GetPercentage()));
-
-                    currentRoute =
-                        otherRoutes.Count > 0 && otherRoutes[0].GetPercentage() > currentRoute.GetPercentage()
-                            ? otherRoutes[0]
-                            : currentRoute;
-
-                    ErrorOccurred?.Invoke(this, new ErrorEventArgs(new RouteError
+                    var futureRoute = _futureRoutes.FirstOrDefault(r => r.State == RouteState.Completed);
+                    var errorRoutes = futureRoute != null ? FindWayToRoute(currentRoute,futureRoute, []) : null;
+                    if (futureRoute != null && errorRoutes != null && errorAction == RouteErrorAction.Skip)
                     {
-                        StartState = currentRoute.StartState,
-                        EndState = currentRoute.EndState,
-                        Position = symbolIndex,
-                        Text = currentRoute.ErrorMessage,
-                        Route = currentRoute.ToString() ?? string.Empty,
-                    }));
+                        foreach (var route in errorRoutes)
+                        {
+                            ErrorOccurred?.Invoke(this, new ErrorEventArgs(new RouteError
+                            {
+                                StartState = route.StartState,
+                                EndState = route.EndState,
+                                Position = symbolIndex,
+                                Text = route.ErrorMessage,
+                                Route = route.ToString() ?? string.Empty,
+                            }));
+                        }
 
-                    if (_errorSymbols.ContainsKey(currentRoute))
-                        _errorSymbols.Remove(currentRoute);
+                        currentRoute = futureRoute;
+                    }
+                    else
+                    {
 
+                        var otherRoutes = _currentRoutes
+                            .Where(r => r != currentRoute && r.Priority == currentRoute.Priority).ToList();
+                        otherRoutes.Sort((r1, r2) => r1.GetPercentage().CompareTo(r2.GetPercentage()));
+
+                        currentRoute =
+                            otherRoutes.Count > 0 && otherRoutes[0].GetPercentage() > currentRoute.GetPercentage()
+                                ? otherRoutes[0]
+                                : currentRoute;
+                        
+                        ErrorOccurred?.Invoke(this, new ErrorEventArgs(new RouteError
+                        {
+                            StartState = currentRoute.StartState,
+                            EndState = currentRoute.EndState,
+                            Position = symbolIndex,
+                            Text = currentRoute.ErrorMessage,
+                            Route = currentRoute.ToString() ?? string.Empty,
+                        }));
+                        
+                        if (_errorSymbols.ContainsKey(currentRoute))
+                            _errorSymbols.Remove(currentRoute);
+                    }
+                    
 
                     MoveToNextState(currentRoute);
                     if (currentRoute.EndState == _endState) return 0;
@@ -187,6 +217,7 @@ public class FiniteStateMachine : IFiniteStateMachine
                 }
             }
         }
+        _futureRoutes.ForEach(r => r.PutChar(symbol));
 
         if (_currentRoutes.Count == 0)
         {
@@ -268,5 +299,62 @@ public class FiniteStateMachine : IFiniteStateMachine
         _currentState = _startState;
         _inProgress = false;
         _isFirstIteration = true;
+    }
+
+    private List<IRoute> GetNextStates(string state)
+    {
+      
+        List<string> tempStates = [];
+        List<IRoute> result = [];
+        
+        tempStates = _states.Where(s => s.Key.Item1 == state).SelectMany(s => s.Value).Select(r => r.EndState).Distinct().ToList();
+
+        for(int i = 0; i < tempStates.Count; i++){
+        // while (tempStates.Any())
+        // {
+            var currentState = tempStates[i];
+            var temp = _states.Where(s => s.Key.Item1 == currentState).SelectMany(s => s.Value);
+            foreach (var route in temp)
+            {
+                if(!tempStates.Contains(route.EndState))
+                    tempStates.Add(route.EndState);
+            }
+            tempStates.AddRange(temp.Select(r => r.EndState).ToList());
+            tempStates = tempStates.Distinct().ToList();
+            //tempStates.RemoveAt(0);
+            
+            result.AddRange(temp);
+        }
+        
+        result = result.Distinct().ToList();
+        return result;
+    }
+
+    private List<IRoute> FindWayToRoute(IRoute current, IRoute searchRoute, List<IRoute> previousRoutes)
+    {
+        List<IRoute> result = [];
+        
+        var nextRoutes = _states.Where(state => state.Key.Item1 == current.EndState)
+            .SelectMany(state => state.Value ?? []).ToList();
+
+        if (nextRoutes.Contains(searchRoute))
+            return [current];
+
+        previousRoutes.Add(current);
+        foreach (var route in nextRoutes)
+        {
+            if(route.EndState == current.StartState)continue;
+            if(previousRoutes.Contains(route))continue;
+            
+            var ways = FindWayToRoute(route, searchRoute, previousRoutes);
+            if(ways?.Count > 0)
+            {
+                result = [current];
+                result.AddRange(ways);
+                break;
+            }
+        }
+        
+        return result;
     }
 }
